@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Memory Quiz</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mesh-gradient"></div>
+    
+    <main class="app-container">
+        <nav class="quiz-nav">
+            <div class="score-pill">
+                <span class="dot"></span>
+                <span id="score-text">Đúng: 0</span>
+            </div>
+            <div class="timer-pill">
+                <span id="progress-percent">0%</span>
+            </div>
+        </nav>
+
+        <div class="master-bar">
+            <div id="fill" class="fill"></div>
+        </div>
+
+        <section id="screen-upload" class="active-screen">
+            <div class="hero-content">
+                <h1>Học Tập Thông Minh</h1>
+                <p>Hệ thống hỗ trợ trí nhớ dài hạn qua trắc nghiệm</p>
+                <div class="upload-zone" id="drop-zone">
+                    <input type="file" id="fileInput" hidden accept=".txt">
+                    <div class="icon">📁</div>
+                    <p>Kéo thả hoặc nhấn để tải file câu hỏi</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-quiz" class="hide">
+            <div class="question-header">
+                <span id="q-category">KIẾN THỨC CHUNG</span>
+                <h2 id="question-display">...</h2>
+            </div>
+            <div id="answer-grid" class="answer-grid"></div>
+            <div class="footer">
+                <button id="btn-next" class="btn-primary hide">Câu Tiếp Theo</button>
+            </div>
+        </section>
+
+        <section id="screen-result" class="hide"></section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
