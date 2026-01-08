@@ -1,20 +1,22 @@
 let fileInput = document.getElementById('fileInput');
 let dropZone = document.getElementById('drop-zone');
 let fill = document.getElementById('fill');
-let questionDisplay = document.getElementById('question-display');
-let answerGrid = document.getElementById('answer-grid');
-let btnNext = document.getElementById('btn-next');
 let scoreText = document.getElementById('score-text');
 
 let quizData = []; 
+let currentRoundData = []; // Danh sách câu hỏi của vòng hiện tại
 let currentIndex = 0;
 let score = 0;
 let answered = false;
 let wrongQuestions = []; 
 let isReviewPhase = false; 
 
+// Khai báo lại các biến động sau khi reset UI
+let questionDisplay, answerGrid, btnNext;
+
 dropZone.onclick = () => fileInput.click();
 
+// --- XỬ LÝ FILE ---
 ['dragenter', 'dragover'].forEach(eventName => {
     dropZone.addEventListener(eventName, (e) => {
         e.preventDefault();
@@ -33,7 +35,7 @@ dropZone.onclick = () => fileInput.click();
 
 dropZone.addEventListener('drop', (e) => {
     const file = e.dataTransfer.files[0];
-    if (file && file.type === "text/plain") handleFile(file);
+    if (file) handleFile(file);
 }, false);
 
 fileInput.onchange = (e) => {
@@ -72,6 +74,9 @@ function startQuiz() {
     document.getElementById('screen-quiz').classList.remove('hide');
     score = 0;
     scoreText.innerText = `Đúng: 0`;
+    
+    // Tạo bản sao để xáo trộn lần đầu
+    currentRoundData = [...quizData];
     restartSameQuiz();
 }
 
@@ -79,23 +84,25 @@ function restartSameQuiz() {
     currentIndex = 0;
     wrongQuestions = [];
     isReviewPhase = false;
-    quizData.sort(() => Math.random() - 0.5);
+    currentRoundData = [...quizData].sort(() => Math.random() - 0.5);
     resetQuizUI();
     renderQuestion();
 }
 
 function resetQuizUI() {
-    document.getElementById('screen-quiz').innerHTML = `
+    const screenQuiz = document.getElementById('screen-quiz');
+    screenQuiz.innerHTML = `
         <div class="question-header">
-            <span id="q-category">KIẾN THỨC CHUNG</span>
-            <h2 id="question-display">...</h2>
+            <span id="q-category" style="color: var(--ios-blue); font-weight: 800; font-size: 12px; letter-spacing: 1px;">KIẾN THỨC CHUNG</span>
+            <h2 id="question-display" style="margin-top:10px;">...</h2>
         </div>
-        <div id="answer-grid" class="answer-grid"></div>
-        <div class="footer" style="display: flex; gap: 10px;">
-            <button id="btn-skip" class="btn-primary" style="background: rgba(255, 255, 255, 0.1); color: rgba(197, 195, 195, 0.1);">Bỏ Qua</button>
-            <button id="btn-next" class="btn-primary hide">Câu Tiếp Theo</button>
+        <div id="answer-grid" class="answer-layout" style="margin-top:20px;"></div>
+        <div class="footer" style="display: flex; gap: 10px; margin-top: 30px;">
+            <button id="btn-skip" class="btn-primary-ios" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; flex: 1; padding: 15px; border-radius: 20px; cursor: pointer;">Bỏ Qua</button>
+            <button id="btn-next" class="btn-primary-ios hide" style="background: #fff; color: #000; flex: 1; padding: 15px; border-radius: 20px; font-weight: 700; cursor: pointer;">Câu Tiếp Theo</button>
         </div>
     `;
+    
     questionDisplay = document.getElementById('question-display');
     answerGrid = document.getElementById('answer-grid');
     btnNext = document.getElementById('btn-next');
@@ -104,20 +111,23 @@ function resetQuizUI() {
 }
 
 function renderQuestion() {
+    if (!currentRoundData[currentIndex]) return; // Phòng thủ lỗi undefined
+
     answered = false;
     btnNext.classList.add('hide');
     document.getElementById('btn-skip').classList.remove('hide');
     answerGrid.innerHTML = '';
     
-    const currentList = isReviewPhase ? wrongQuestions : quizData;
-    const q = currentList[currentIndex];
+    const q = currentRoundData[currentIndex];
 
-    document.getElementById('q-category').innerText = isReviewPhase ? `ÔN LẠI (${currentIndex + 1}/${currentList.length})` : `CÂU HỎI ${currentIndex + 1}`;
+    document.getElementById('q-category').innerText = isReviewPhase ? `ÔN LẠI (${currentIndex + 1}/${currentRoundData.length})` : `CÂU HỎI ${currentIndex + 1} / ${currentRoundData.length}`;
     questionDisplay.innerText = q.q;
 
-    fill.style.width = `${(currentIndex / currentList.length) * 100}%`;
-    document.getElementById('progress-percent').innerText = `${Math.round((currentIndex / currentList.length) * 100)}%`;
+    // Cập nhật Progress Bar
+    const progress = (currentIndex / currentRoundData.length) * 100;
+    fill.style.width = `${progress}%`;
 
+    // Render đáp án
     [...q.a].sort(() => Math.random() - 0.5).forEach(ans => {
         const div = document.createElement('div');
         div.className = 'choice-card';
@@ -140,7 +150,9 @@ function handleCheck(el, isCorrect, questionObj) {
         }
     } else {
         el.classList.add('is-wrong');
-        if (!wrongQuestions.includes(questionObj)) wrongQuestions.push(questionObj);
+        if (!wrongQuestions.some(item => item.q === questionObj.q)) {
+            wrongQuestions.push(questionObj);
+        }
         showCorrectAnswer(questionObj, 'is-correct'); 
     }
     showNextButton();
@@ -150,13 +162,13 @@ function handleSkip() {
     if (answered) return;
     answered = true;
     
-    const currentList = isReviewPhase ? wrongQuestions : quizData;
-    const q = currentList[currentIndex];
-    
-    if (!wrongQuestions.includes(q)) wrongQuestions.push(q);
+    const q = currentRoundData[currentIndex];
+    if (!wrongQuestions.some(item => item.q === q.q)) {
+        wrongQuestions.push(q);
+    }
     
     document.getElementById('btn-skip').classList.add('hide');
-    showCorrectAnswer(q, 'is-wrong'); 
+    showCorrectAnswer(q, 'is-wrong'); // Hiện màu đỏ viền trắng để cảnh báo
     showNextButton();
 }
 
@@ -173,17 +185,17 @@ function showCorrectAnswer(qObj, className) {
 function showNextButton() {
     btnNext.classList.remove('hide');
     btnNext.onclick = () => {
-        const currentList = isReviewPhase ? wrongQuestions : quizData;
         currentIndex++;
-        if (currentIndex < currentList.length) {
+        if (currentIndex < currentRoundData.length) {
             renderQuestion();
         } else {
             if (wrongQuestions.length > 0) {
+                // Sang vòng ôn lại những câu sai
                 isReviewPhase = true;
-                currentIndex = 0;
-                const nextRound = [...wrongQuestions];
+                currentRoundData = [...wrongQuestions].sort(() => Math.random() - 0.5);
                 wrongQuestions = []; 
-                startNewRound(nextRound);
+                currentIndex = 0;
+                renderQuestion();
             } else {
                 showFinalResult();
             }
@@ -191,25 +203,18 @@ function showNextButton() {
     };
 }
 
-function startNewRound(list) {
-    wrongQuestions = [];
-    quizData = list; 
-    currentIndex = 0;
-    renderQuestion();
-}
-
 function showFinalResult() {
     const screen = document.getElementById('screen-quiz');
+    fill.style.width = '100%';
     screen.innerHTML = `
-        <div style="text-align: center; padding: 20px 0;">
-            <div style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
-            <h1 style="font-size: 2.5rem; margin: 0; background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Completed!</h1>
-            <p style="margin: 15px 0; opacity: 0.8;">Bạn đã thuộc hết tất cả các câu hỏi trong bộ này.</p>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-                <button class="btn-primary" onclick="restartSameQuiz()" style="background: #3b82f6; color: white; margin: 0;">Again</button>
-                <button class="btn-primary" onclick="location.reload()" style="margin: 0;">Continue (TẢI FILE MỚI)</button>
+        <div style="text-align: center; padding: 40px 0; animation: fadeIn 0.5s ease;">
+            <div style="font-size: 5rem; margin-bottom: 20px;">🏆</div>
+            <h1 style="font-size: 2.5rem; margin: 0; background: linear-gradient(to right, #32D74B, #0A84FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sứ Mệnh Hoàn Thành!</h1>
+            <p style="margin: 20px 0; opacity: 0.8; font-size: 1.1rem;">Bạn đã ghi nhớ hoàn toàn bộ câu hỏi này.</p>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 30px;">
+                <button class="btn-primary-ios" onclick="restartSameQuiz()" style="background: #fff; color: #000; border: none; padding: 18px; border-radius: 20px; font-weight: 800; cursor: pointer;">Luyện Lại Lần Nữa</button>
+                <button class="btn-primary-ios" onclick="location.reload()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 18px; border-radius: 20px; cursor: pointer;">Chọn Bài Mới</button>
             </div>
         </div>
     `;
-    fill.style.width = '100%';
 }
