@@ -203,11 +203,11 @@ function showFinalResult() {
     screen.innerHTML = `
         <div style="text-align: center; padding: 20px 0;">
             <div style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
-            <h1 style="font-size: 2.5rem; margin: 0; background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">HOÀN THÀNH!</h1>
+            <h1 style="font-size: 2.5rem; margin: 0; background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Completed!</h1>
             <p style="margin: 15px 0; opacity: 0.8;">Bạn đã thuộc hết tất cả các câu hỏi trong bộ này.</p>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-                <button class="btn-primary" onclick="restartSameQuiz()" style="background: #3b82f6; color: white; margin: 0;">LÀM LẠI BÀI NÀY</button>
-                <button class="btn-primary" onclick="location.reload()" style="margin: 0;">TIẾP TỤC (TẢI FILE MỚI)</button>
+                <button class="btn-primary" onclick="restartSameQuiz()" style="background: #3b82f6; color: white; margin: 0;">Again</button>
+                <button class="btn-primary" onclick="location.reload()" style="margin: 0;">Continue (TẢI FILE MỚI)</button>
             </div>
         </div>
     `;
